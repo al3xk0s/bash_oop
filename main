@@ -1,0 +1,16 @@
+#!/usr/bin/bash
+
+source ./base
+source ./util
+
+function Integer() {
+    local ptr_this="$1"
+    local this="$ptr_this" && declare -n this
+
+    Object "$ptr_this"
+
+    this[value]="$2"
+}
+
+new int_ptr Integer 3
+echo $int_ptr

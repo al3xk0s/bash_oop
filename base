@@ -1,0 +1,100 @@
+source ./base_util
+source ./obj_util
+
+function getAllMethods() {
+    _getMethodsOfPattern "$OOP_GREP_METHOD_PATTERN"
+}
+
+function getStaticMethods() {
+    _getMethodsOfPattern "$OOP_GREP_STATIC_METHOD_PATTERN"
+}
+
+function getDynamicMethods() {
+    _getMethodsOfPattern "$OOP_GREP_DYNAMIC_METHOD_PATTERN"
+}
+
+function getDynamicMethodsOfClasses() {
+    local classes="${@}"    
+    local matchClasses=$(echo ${classes[@]} | sed 's/ /|/g')
+    getDynamicMethods | grep -E "$matchClasses"
+}
+
+function getP() {
+    local propertyPath="$1"
+    local items    
+    _getProcessedPath "$propertyPath" items
+
+    _getPropOfPath ${items[@]}
+}
+
+function setP() {
+    local propertyPath="$1"
+    local value="$2"
+
+    local items    
+    _getProcessedPath "$propertyPath" items
+
+    local lastIndex=$(( ${#items[@]} - 1 ))
+    local target=$(_getPropOfPath ${items[@]::$lastIndex}) && declare -n target
+    target[${items[$lastIndex]}]="$value"
+}
+
+function p {
+    if [[ "$2" == "=" ]]; then
+        setP "$1" "$3"
+        return 0
+    fi
+    getP "$1"
+}
+
+function call() {
+    local propertyPath="$1"
+    local items
+    _split items "$propertyPath" '.'
+
+    local preLastIndex=$(( ${#items[@]} - 2 ))
+    local objPtr="${items[preLastIndex]}"
+
+    local executable=$(_getPropOfPath ${items[@]})
+    $executable "$objPtr" ${@:2}
+}
+
+function new() {
+    if ! _isValidClassName "$3"; then
+        return 1
+    fi
+
+    local calledClass="$3"
+    local ptr=$(_getUniqueObjPtr "$calledClass")
+
+    declare -A -g $ptr && \
+    eval "$ptr[type]="$calledClass"" && \
+    implements "$ptr" "$calledClass" && \
+    $calledClass $ptr ${@:4} && \
+    eval "$1=\"${ptr}\""
+}
+
+function extends() {
+    local this="$1"
+    local class="$2"    
+
+    if ! _isValidClassName "$class"; then
+        return 1
+    fi
+}
+
+function implements() {
+    local this="$1" && declare -n this
+    local type="${this[type]}"
+    local methods=($(getDynamicMethodsOfClasses ${@:2} | sed 's|.*\.||g'))
+    
+    local current
+    for current in ${methods[@]}; do
+        this[$current]="${type}.${current}"
+    done
+}
+
+function Object {
+    local this="$1" && declare -n this
+    this[ptr]="$1"
+}

@@ -1,0 +1,13 @@
+#!/usr/bin/bash
+
+function fooBar() {
+    local first="$1"
+    local last="$2"
+    local three="$3"
+
+    
+}
+
+if [[ condition ]]; then
+
+fi

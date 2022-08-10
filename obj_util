@@ -1,0 +1,46 @@
+Object.IsObjectPtr() {
+    if [[ "$1" =~ $OOP_PTR_PATTERN ]]; then
+        return 0
+    fi
+    return 1
+}
+
+Object.toString() {
+    local obj_ptr="$1"
+
+    if ! Object.IsObjectPtr "$obj_ptr"; then
+        return 0
+    fi    
+
+    local obj="$obj_ptr" && declare -n obj || return 0
+    
+    local value=""
+
+    for k in "${!obj[@]}"; do
+        value="${obj[$k]}"
+        echo "$k: $value"
+
+        if [[ "$value" == "$obj_ptr" ]]; then
+            continue
+        fi
+
+        Object.toString "$value"
+    done
+}
+
+Object.equals() {
+    local this="$1"
+    local other="$2"
+
+    if [[ "$this" == "$other" ]]; then
+        echo true
+        return 0
+    fi
+    echo false
+    return 1
+}
+
+Object.dispose() {
+    local this="$1"
+    unset $this
+}

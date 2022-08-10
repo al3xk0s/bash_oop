@@ -1,0 +1,12 @@
+#!/usr/bin/bash
+
+source ./base
+
+function Json {
+    local this="$1"
+    Object "$this"
+}
+
+Json.Parce() {
+        
+}

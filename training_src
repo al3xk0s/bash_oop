@@ -1,0 +1,10 @@
+a = 1 # Declare variable + assign
+b = 2 
+c = a + b # Declare variable + Dereference х2 + Ariphmetic.sum
+
+function getMul(a: int, b: int) { # Declare function + declare local var
+    return a * b #  Ariphmetic.mul + return
+}
+
+d = getMul(a, c) # Declare + Dereference х2 + Call + Assign
+echo(d) # Dereference + Call

@@ -1,0 +1,117 @@
+export OOP_PTR_LENGTH="20"
+
+export OOP_GREP_CLASS_PATTERN="_*[A-Z][a-zA-Z0-9_]*"
+export OOP_GREP_METHOD_PATTERN="$OOP_GREP_CLASS_PATTERN\."
+export OOP_GREP_DYNAMIC_METHOD_PATTERN="${OOP_GREP_METHOD_PATTERN}_*[a-z][a-zA-Z0-9]*"
+export OOP_GREP_STATIC_METHOD_PATTERN="${OOP_GREP_METHOD_PATTERN}_*[A-Z][a-zA-Z0-9]*"
+
+export OOP_CLASS_PATTERN="(${OOP_GREP_CLASS_PATTERN})"
+export OOP_PTR_PATTERN="(${OOP_CLASS_PATTERN}_[[:alnum:]]{$OOP_PTR_LENGTH})"
+
+function _getRandomStr() {
+    if [[ -z ${1+x} ]]; then
+        return 1
+    fi
+
+    local lenght="$1"
+    echo $RANDOM | md5sum | head -c "$lenght"; echo;
+}
+
+function _split() {
+    local oldIFS="$IFS"
+
+    local varName="$1"
+    local data="$2"
+    local sep="$3"
+    
+    IFS="$sep" read -ra "$varName" <<< "$data"
+    IFS="$oldIFS"
+}
+
+
+function _isValidClassName() {
+    local className="$1"
+
+    if [[ ! "$className" =~ $OOP_CLASS_PATTERN ]]; then
+        return 1
+    fi
+    if [[ ! $(command -v "$className") ]]; then
+        return 1
+    fi
+    return 0
+}
+
+function _getObjPtr() {
+    local class="$1"
+    local id="$2"
+    echo "${class}_${id}"
+}
+
+function _getPtrID() {
+    _getRandomStr $OOP_PTR_LENGTH
+}
+
+function _isUniquePtr() {
+    eval "if [[ -z \${$1+x} ]]; then return 0; fi"
+    return 1
+}
+
+function _getUniqueObjPtr() {
+    local className="$1"
+    local id
+    local ptr
+
+    while true; do    
+        id="$(_getPtrID)"
+        ptr="$(_getObjPtr "$className" "$id")"
+
+        if _isUniquePtr "$ptr"; then
+            break
+        fi
+    done
+    echo "$ptr"
+}
+
+function _getMethodsOfPattern() {
+    compgen -ca | grep "$1"
+}
+
+function _extend() {
+    local className="$1"
+    local obj="$OOP_THIS" && declare -n obj
+    local pattern="( +$className +)"
+
+    if [[ "${obj[extends]}" =~ $pattern ]]; then 
+        return 0
+    fi
+}
+
+function _getPropValue() {
+    local obj="$1"
+    local fieldName="$2"
+    eval "echo "\${$obj[$fieldName]}""
+}
+
+function _getPropOfPath() {
+    local items=(${@})
+    local lenght=${#items[@]}
+
+    local i
+    local value="${items[0]}"
+    local name
+
+    for (( i=1; i<${lenght}; i++ )); do
+        name="${items[$i]}"
+        value=$(_getPropValue "$value" "$name")
+    done
+    echo "$value"
+}
+
+function _getProcessedPath() {
+    local propertyPath="$1"
+    local variableName="$2"
+
+    propertyPath=$(echo "$propertyPath" | sed 's|\[|.|g' | sed 's|\]||g')
+
+    _split $variableName "$propertyPath" '.'
+}

@@ -1,0 +1,28 @@
+#!/usr/bin/bash
+
+source ./base
+
+function List {
+    local this="$1"
+    Object "$this"
+
+    local itemsPtr="$(_getUniqueObjPtr Array)"
+    eval "local $itemsPtr=()"
+
+    p $this.items = "$itemsPtr"
+}
+
+List.add() {
+    local this="$1"
+    local items=$(p $this.items) && declare -n items
+    items[${#items[@]}]="$2"
+}
+
+List.getLength() {
+    local this="$1"
+    local items="$(p $this.items)" && declare -n items
+    echo ${#items[@]}
+}
+
+new ls = List
+Object.toString $ls
